@@ -84,7 +84,7 @@ pipeline {
                         rm -rf ops-airnav
                         
                         # 2. Clone the ops repository (specifically the staging branch)
-                        git clone -b staging https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/sylthecatto/ops-airnav.git
+                        git clone -b staging https://\${GIT_USERNAME}:\${GIT_PASSWORD}@github.com/sylthecatto/ops-airnav.git
                         cd ops-airnav
                         
                         # 3. Configure Git identity for the Jenkins bot
