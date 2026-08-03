@@ -79,5 +79,24 @@ pipeline {
                 echo "Ready to trigger GitOps update..."
             }
         }
+
+        // ==========================================
+        // PRODUCTION PIPELINE
+        // ==========================================
+        stage('Build & Push (Production)') {
+            when {
+                branch 'production' // This tells Jenkins to ONLY run this if the branch is production
+            }
+            steps {
+                script {
+                    // Notice we changed the tag from 'staging-' to 'prod-'
+                    env.GIT_HASH = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    env.IMAGE = "${REGISTRY}/${APP_NAME}:prod-${env.GIT_HASH}"
+                }
+                
+                sh "docker build -t ${env.IMAGE} ."
+                sh "docker push ${env.IMAGE}"
+            }
+        }
     }
 }
