@@ -72,33 +72,39 @@ pipeline {
                 // ==========================================
                 // GITOPS HANDOFF
                 // ==========================================
-                // We use existing GitHub credentials to authorize the clone and push.
-                withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh """
-                        echo "Starting GitOps update for branch: ${env.BRANCH_NAME}"
-                        
-                        # 1. Clean up workspace to prevent conflicts from previous runs
-                        rm -rf ops-airnav
-                        
-                        # 2. Clone the ops repository matching the current environment branch
-                        # NOTE: Using backslashes before variables (\$) ensures the shell handles the password securely
-                        git clone -b ${env.BRANCH_NAME} https://\${GIT_USERNAME}:\${GIT_PASSWORD}@github.com/sylthecatto/ops-airnav.git
-                        cd ops-airnav
-                        
-                        # 3. Configure Git identity for the Jenkins bot
-                        git config user.email "jenkins-bot@airnav.com"
-                        git config user.name "Jenkins Automation"
-                        
-                        # 4. Update the image tag in the Kubernetes manifest using 'sed'
-                        sed -i 's|image: 192.168.10.23:5000/new-app:.*|image: ${env.IMAGE}|g' k8s/deployment.yaml
-                        
-                        # 5. Commit and push the changes back to GitHub
-                        git add .
-                        git commit -m "ci: update ${env.BRANCH_NAME} image tag to ${env.IMAGE}"
-                        git push origin ${env.BRANCH_NAME}
-                        
-                        echo "Successfully pushed new manifest to ops-airnav! ArgoCD should sync shortly."
-                    """
+                script {
+                    if (env.BRANCH_NAME == 'staging' || env.BRANCH_NAME == 'production') {
+                        // We use existing GitHub credentials to authorize the clone and push.
+                        withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            sh """
+                                echo "Starting GitOps update for branch: ${env.BRANCH_NAME}"
+                                
+                                # 1. Clean up workspace to prevent conflicts from previous runs
+                                rm -rf ops-airnav
+                                
+                                # 2. Clone the ops repository matching the current environment branch
+                                # NOTE: Using backslashes before variables (\$) ensures the shell handles the password securely
+                                git clone -b ${env.BRANCH_NAME} https://\${GIT_USERNAME}:\${GIT_PASSWORD}@github.com/sylthecatto/ops-airnav.git
+                                cd ops-airnav
+                                
+                                # 3. Configure Git identity for the Jenkins bot
+                                git config user.email "jenkins-bot@airnav.com"
+                                git config user.name "Jenkins Automation"
+                                
+                                # 4. Update the image tag in the Kubernetes manifest using 'sed'
+                                sed -i 's|image: 192.168.10.23:5000/new-app:.*|image: ${env.IMAGE}|g' k8s/deployment.yaml
+                                
+                                # 5. Commit and push the changes back to GitHub
+                                git add .
+                                git commit -m "ci: update ${env.BRANCH_NAME} image tag to ${env.IMAGE}"
+                                git push origin ${env.BRANCH_NAME}
+                                
+                                echo "Successfully pushed new manifest to ops-airnav! ArgoCD should sync shortly."
+                            """
+                        }
+                    } else {
+                        echo "Skipping GitOps manifest update because this is a Pull Request or unsupported branch."
+                    }
                 }
             }
         }
