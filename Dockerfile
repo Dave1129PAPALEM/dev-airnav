@@ -1,13 +1,23 @@
+# Use a stable, official Node.js image
 FROM node:18
 
+# Set the working directory inside the container
 WORKDIR /usr/src/app
 
-COPY package.json .
+# Optimize performance for Express apps
+ENV NODE_ENV=production
 
-RUN npm install
+# Copy package files first to cache the dependencies
+COPY package*.json ./
 
-COPY app.js .
+# Install exact dependencies from package-lock.json
+RUN npm ci
 
-EXPOSE 3000
+# Copy the rest of the application files
+COPY . .
 
-CMD ["node", "index.js"]
+# Document that the app listens on port 3001 by default
+EXPOSE 3001
+
+# Start the application
+CMD ["node", "app.js"]

@@ -53,7 +53,11 @@ app.put('/api/tasks/:id', (req, res) => {
   res.json(task);
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Task Manager app running on port ${PORT}`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`Task Manager app running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
