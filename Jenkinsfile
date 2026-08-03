@@ -96,7 +96,7 @@ pipeline {
                                 
                                 # 5. Commit and push the changes back to GitHub
                                 git add .
-                                git commit -m "ci: update ${env.BRANCH_NAME} image tag to ${env.IMAGE}"
+                                git commit -m "ci: update ${env.BRANCH_NAME} image tag to ${env.IMAGE}" || echo "No changes to commit"
                                 git push origin ${env.BRANCH_NAME}
                                 
                                 echo "Successfully pushed new manifest to ops-airnav! ArgoCD should sync shortly."
