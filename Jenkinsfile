@@ -27,12 +27,13 @@ pipeline {
                         // ==========================================
                         // PRODUCTION: Semantic Versioning
                         // ==========================================
-                        // Enforce Semantic Versioning from Git Tags (e.g., v1.0.0)
-                        env.SEMVER_TAG = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
+                        // Read the application version directly from package.json (e.g., v1.0.0)
+                        def packageVersion = sh(script: "grep '\"version\":' package.json | head -1 | sed 's/.*\"version\": *\"\\([^\"]*\\)\".*/\\1/'", returnStdout: true).trim()
+                        env.SEMVER_TAG = "v${packageVersion}"
                         
                         // Security Guard Check: Ensure it actually matches semantic format
                         if (!(env.SEMVER_TAG ==~ /^v[0-9]+\.[0-9]+\.[0-9]+$/)) {
-                            error("VERSIONING ERROR: Production build failed. Git tag '${env.SEMVER_TAG}' does not match semantic versioning format (e.g., v1.0.0).")
+                            error("VERSIONING ERROR: Production build failed. package.json version '${env.SEMVER_TAG}' does not match semantic versioning format (e.g., v1.0.0).")
                         }
                         
                         env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.SEMVER_TAG}"
