@@ -75,8 +75,34 @@ pipeline {
                 branch 'staging'
             }
             steps {
-                echo "Successfully built and pushed: ${env.IMAGE}"
-                echo "Ready to trigger GitOps update..."
+                // We use your existing GitHub credentials to authorize the clone and push
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh """
+                        echo "Starting GitOps update for Staging..."
+                        
+                        # 1. Clean up workspace to prevent conflicts from previous runs
+                        rm -rf ops-airnav
+                        
+                        # 2. Clone the ops repository (specifically the staging branch)
+                        git clone -b staging https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/sylthecatto/ops-airnav.git
+                        cd ops-airnav
+                        
+                        # 3. Configure Git identity for the Jenkins bot
+                        git config user.email "jenkins-bot@airnav.com"
+                        git config user.name "Jenkins Automation"
+                        
+                        # 4. Update the image tag in the Kubernetes manifest using 'sed'
+                        # IMPORTANT: Change 'k8s/deployment.yaml' if your file is named something else!
+                        sed -i 's|image: 192.168.10.23:5000/new-app:.*|image: ${env.IMAGE}|g' k8s/deployment.yaml
+                        
+                        # 5. Commit and push the changes back to GitHub
+                        git add .
+                        git commit -m "ci: update staging image tag to ${env.IMAGE}"
+                        git push origin staging
+                        
+                        echo "Successfully pushed new manifest to ops-airnav! ArgoCD should sync shortly."
+                    """
+                }
             }
         }
 
