@@ -1,5 +1,5 @@
-# Use a stable, official Node.js image (using alpine since it is cached on the isolated Jenkins server)
-FROM node:alpine
+# Use a stable, official Node.js image
+FROM node:18
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
