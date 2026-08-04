@@ -22,16 +22,11 @@ pipeline {
 
         stage('Test Application') {
             steps {
-                echo "Running unit tests via Jest inside Docker"
-                sh """
-                    # Run tests inside a Node container because Jenkins might not have npm installed locally
-                    docker run --rm \\
-                        -u "\$(id -u):\$(id -g)" \\
-                        -v "\$(pwd):/app" \\
-                        -w /app \\
-                        -e npm_config_cache=/tmp/.npm \\
-                        node:18 sh -c 'npm install && npm test'
-                """
+                echo "Running unit tests via Jest"
+                sh '''
+                    npm install
+                    npm test
+                '''
             }
         }
 
