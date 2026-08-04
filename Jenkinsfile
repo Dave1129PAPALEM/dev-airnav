@@ -20,6 +20,16 @@ pipeline {
             }
         }
 
+        stage('Test Application') {
+            steps {
+                echo "Running unit tests via Jest"
+                sh '''
+                    npm install
+                    npm test
+                '''
+            }
+        }
+
         stage('Determine Image Version') {
             steps {
                 script {
@@ -52,6 +62,12 @@ pipeline {
         }
 
         stage('Build & Push Docker Image') {
+            when {
+                anyOf {
+                    branch 'staging'
+                    branch 'production'
+                }
+            }
             steps {
                 // ==========================================
                 // BUILD & PUSH
@@ -68,12 +84,17 @@ pipeline {
         }
 
         stage('Update GitOps Manifests') {
+            when {
+                anyOf {
+                    branch 'staging'
+                    branch 'production'
+                }
+            }
             steps {
                 // ==========================================
                 // GITOPS HANDOFF
                 // ==========================================
                 script {
-                    if (env.BRANCH_NAME == 'staging' || env.BRANCH_NAME == 'production') {
                         // We use existing GitHub credentials to authorize the clone and push.
                         withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                             sh """
@@ -102,9 +123,6 @@ pipeline {
                                 echo "Successfully pushed new manifest to ops-airnav! ArgoCD should sync shortly."
                             """
                         }
-                    } else {
-                        echo "Skipping GitOps manifest update because this is a Pull Request or unsupported branch."
-                    }
                 }
             }
         }
