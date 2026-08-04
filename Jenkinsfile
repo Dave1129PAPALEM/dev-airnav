@@ -43,11 +43,13 @@ pipeline {
                         // ==========================================
                         // Read the application version directly from package.json (e.g., v1.0.0)
                         def packageVersion = sh(script: "grep '\"version\":' package.json | head -1 | sed 's/.*\"version\": *\"\\([^\"]*\\)\".*/\\1/'", returnStdout: true).trim()
-                        env.SEMVER_TAG = "v${packageVersion}"
                         
-                        // Security Guard Check: Ensure it actually matches semantic format
-                        if (!(env.SEMVER_TAG ==~ /^v[0-9]+\.[0-9]+\.[0-9]+$/)) {
-                            error("VERSIONING ERROR: Production build failed. package.json version '${env.SEMVER_TAG}' does not match semantic versioning format (e.g., v1.0.0).")
+                        // Append the Git Short Hash to make it 100% dynamic and unique every time!
+                        env.SEMVER_TAG = "v${packageVersion}-${env.GIT_SHORT_SHA}"
+                        
+                        // Security Guard Check: Ensure it actually matches semantic format (e.g., v1.0.0-a1b2c3d)
+                        if (!(env.SEMVER_TAG ==~ /^v[0-9]+\.[0-9]+\.[0-9]+-[a-f0-9]{7}$/)) {
+                            error("VERSIONING ERROR: Production build failed. Tag '${env.SEMVER_TAG}' does not match format (e.g., v1.0.0-a1b2c3d).")
                         }
                         
                         env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.SEMVER_TAG}"
