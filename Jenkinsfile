@@ -10,7 +10,11 @@ pipeline {
         
         // The application name to keep the image tag string cleaner
         APP_NAME = 'new-app'
+        
+        // Fetch Git Short Hash
+        GIT_SHORT_SHA = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
     }
+
 
     stages {
         stage('Checkout Source') {
@@ -51,10 +55,10 @@ pipeline {
                         
                     } else {
                         // ==========================================
-                        // STAGING / DEV: Hash / Build ID Versioning
+                        // STAGING / DEV: Hash Versioning
                         // ==========================================
-                        // Use the branch name and Jenkins Build ID to uniquely identify the image
-                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.BRANCH_NAME}-${env.BUILD_ID}"
+                        // Use the branch name and Git Short Hash to uniquely identify the image
+                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.BRANCH_NAME}-${env.GIT_SHORT_SHA}"
                         echo "Staging/Dev Image Tag set to Hash Version: ${env.IMAGE}"
                     }
                 }
