@@ -48,7 +48,8 @@ pipeline {
                             error("VERSIONING ERROR: Production build failed. Tag '${env.SEMVER_TAG}' does not match semantic versioning format (e.g., v1.0.0).")
                         }
                         
-                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.SEMVER_TAG}"
+                        env.IMAGE_TAG = "${env.SEMVER_TAG}"
+                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.IMAGE_TAG}"
                         echo "Production Image Tag set to Semantic Version: ${env.IMAGE}"
                         env.TARGET_GITOPS_BRANCH = "production"
                         
@@ -57,7 +58,8 @@ pipeline {
                         // STAGING / DEV: Hash Versioning
                         // ==========================================
                         // Use the branch name and Git Short Hash to uniquely identify the image
-                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.BRANCH_NAME}-${env.GIT_SHORT_SHA}"
+                        env.IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_SHORT_SHA}"
+                        env.IMAGE = "${env.REGISTRY}/${env.APP_NAME}:${env.IMAGE_TAG}"
                         echo "Staging/Dev Image Tag set to Hash Version: ${env.IMAGE}"
                         env.TARGET_GITOPS_BRANCH = "${env.BRANCH_NAME}"
                     }
@@ -79,7 +81,7 @@ pipeline {
                 // Builds the Docker image and pushes it directly to our local registry
                 sh """
                     echo "Building Docker image: ${env.IMAGE}"
-                    docker build -t ${env.IMAGE} .
+                    docker build --build-arg APP_VERSION=${env.IMAGE_TAG} -t ${env.IMAGE} .
                     
                     echo "Pushing image to local registry..."
                     docker push ${env.IMAGE}
