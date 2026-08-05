@@ -5,8 +5,8 @@ pipeline {
         // ==========================================
         // CONFIGURATION VARIABLES
         // ==========================================
-        // The network IP of your registry
-        REGISTRY = '192.168.10.23:5000'
+        // The network IP of your registry, loaded securely from Jenkins credentials
+        REGISTRY = credentials('registry-url')
         
         // The application name to keep the image tag string cleaner
         APP_NAME = 'new-app'
