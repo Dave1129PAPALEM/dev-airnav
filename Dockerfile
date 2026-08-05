@@ -7,6 +7,10 @@ WORKDIR /usr/src/app
 # Optimize performance for Express apps
 ENV NODE_ENV=production
 
+# Inject dynamic version from Jenkins
+ARG APP_VERSION=unknown
+ENV APP_VERSION=$APP_VERSION
+
 # Copy package files first to cache the dependencies
 COPY package*.json ./
 
