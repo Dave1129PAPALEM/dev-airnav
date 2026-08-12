@@ -2,8 +2,8 @@ const request = require('supertest');
 const app = require('../app');
 
 describe('Task Manager API', () => {
-  
-  // Test 1: Check if the health endpoint is working
+
+  // Test 1: Check if the health endpoint is workingg
   it('GET /health should return 200 and status healthy', async () => {
     const res = await request(app).get('/health');
     expect(res.statusCode).toEqual(200);
